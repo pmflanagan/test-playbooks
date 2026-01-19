@@ -24,14 +24,10 @@
           - "ansible_machine_id variable defined: {{ ansible_machine_id is defined }}"
           - "ansible_machine_id value: {{ ansible_machine_id | default('NOT DEFINED') }}"
       when: ansible_product_serial is defined or ansible_machine_id is defined
-    - name: set ansible_product_serial from variable as cacheable fact
-      set_fact:
-        ansible_product_serial: "{{ ansible_product_serial }}"
-        cacheable: true
-    - name: set ansible_machine_id from variable as cacheable fact
-      set_fact:
-        ansible_machine_id: "{{ ansible_machine_id }}"
-        cacheable: true
+    - name: set custom facts using custom module
+      set_custom_facts:
+        ansible_product_serial: "{{ ansible_product_serial | default(omit) }}"
+        ansible_machine_id: "{{ ansible_machine_id | default(omit) }}"
     - name: debug facts after setting
       debug:
         msg:
