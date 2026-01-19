@@ -19,21 +19,21 @@
       debug:
         msg:
           - "Host: {{ inventory_hostname }}"
-          - "ansible_product_serial variable defined: {{ ansible_product_serial is defined }}"
-          - "ansible_product_serial value: {{ ansible_product_serial | default('NOT DEFINED') }}"
-          - "ansible_machine_id variable defined: {{ ansible_machine_id is defined }}"
-          - "ansible_machine_id value: {{ ansible_machine_id | default('NOT DEFINED') }}"
-      when: ansible_product_serial is defined or ansible_machine_id is defined
-    - name: set ansible_product_serial from variable as cacheable fact
+          - "ansible_product_serial from hostvars: {{ hostvars[inventory_hostname].get('ansible_product_serial', 'NOT DEFINED') }}"
+          - "ansible_machine_id from hostvars: {{ hostvars[inventory_hostname].get('ansible_machine_id', 'NOT DEFINED') }}"
+          - "ansible_product_serial from current context: {{ ansible_product_serial | default('NOT DEFINED') }}"
+          - "ansible_machine_id from current context: {{ ansible_machine_id | default('NOT DEFINED') }}"
+      when: hostvars[inventory_hostname].get('ansible_product_serial') or hostvars[inventory_hostname].get('ansible_machine_id')
+    - name: set ansible_product_serial from host variable as cacheable fact
       set_fact:
-        ansible_product_serial: "{{ ansible_product_serial }}"
+        ansible_product_serial: "{{ hostvars[inventory_hostname]['ansible_product_serial'] }}"
         cacheable: true
-      when: ansible_product_serial is defined
-    - name: set ansible_machine_id from variable as cacheable fact
+      when: hostvars[inventory_hostname].get('ansible_product_serial') is not none
+    - name: set ansible_machine_id from host variable as cacheable fact
       set_fact:
-        ansible_machine_id: "{{ ansible_machine_id }}"
+        ansible_machine_id: "{{ hostvars[inventory_hostname]['ansible_machine_id'] }}"
         cacheable: true
-      when: ansible_machine_id is defined
+      when: hostvars[inventory_hostname].get('ansible_machine_id') is not none
     - name: debug facts after setting
       debug:
         msg:
