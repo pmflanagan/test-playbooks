@@ -27,13 +27,13 @@
     - name: set ansible_product_serial from variable as cacheable fact
       set_fact:
         ansible_product_serial: "{{ ansible_product_serial }}"
+        cacheable: true
       when: ansible_product_serial is defined
-      cacheable: true
     - name: set ansible_machine_id from variable as cacheable fact
       set_fact:
         ansible_machine_id: "{{ ansible_machine_id }}"
+        cacheable: true
       when: ansible_machine_id is defined
-      cacheable: true
     - name: debug facts after setting
       debug:
         msg:
