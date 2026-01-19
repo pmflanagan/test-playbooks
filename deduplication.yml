@@ -1,0 +1,45 @@
+---
+
+- hosts: all
+  vars:
+    play_gather: true
+    extra_value: ""
+  gather_facts: "{{ play_gather }}"
+  tasks:
+    - name: set a fact man
+      set_fact:
+        foo: "bar{{ extra_value }}"
+        bar:
+          a:
+            b:
+              - "c"
+              - "d"
+        cacheable: "{{ set_fact_cacheable | default(false) }}"
+    - name: debug host variables for fact setting
+      debug:
+        msg:
+          - "Host: {{ inventory_hostname }}"
+          - "ansible_product_serial variable defined: {{ ansible_product_serial is defined }}"
+          - "ansible_product_serial value: {{ ansible_product_serial | default('NOT DEFINED') }}"
+          - "ansible_machine_id variable defined: {{ ansible_machine_id is defined }}"
+          - "ansible_machine_id value: {{ ansible_machine_id | default('NOT DEFINED') }}"
+      when: ansible_product_serial is defined or ansible_machine_id is defined
+    - name: set ansible_product_serial from variable as cacheable fact
+      set_fact:
+        ansible_product_serial: "{{ ansible_product_serial }}"
+      when: ansible_product_serial is defined
+      cacheable: true
+    - name: set ansible_machine_id from variable as cacheable fact
+      set_fact:
+        ansible_machine_id: "{{ ansible_machine_id }}"
+      when: ansible_machine_id is defined
+      cacheable: true
+    - name: debug facts after setting
+      debug:
+        msg:
+          - "Host: {{ inventory_hostname }}"
+          - "ansible_product_serial fact set: {{ ansible_product_serial is defined }}"
+          - "ansible_product_serial fact value: {{ ansible_product_serial | default('NOT SET') }}"
+          - "ansible_machine_id fact set: {{ ansible_machine_id is defined }}"
+          - "ansible_machine_id fact value: {{ ansible_machine_id | default('NOT SET') }}"
+      when: ansible_product_serial is defined or ansible_machine_id is defined
