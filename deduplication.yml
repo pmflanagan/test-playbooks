@@ -3,20 +3,16 @@
 #
 # This playbook is used for testing the metrics utility's deduplication feature.
 #
-# IMPORTANT NOTE ON FACT CACHING:
-# ================================
-# While this playbook attempts to set ansible_product_serial and ansible_machine_id
-# as cacheable facts, AAP 2.6 has limitations with custom fact persistence:
+# FACT CACHING FOR DEDUPLICATION TESTS:
+# ======================================
+# This playbook sets ansible_product_serial and ansible_machine_id as cacheable
+# facts for deduplication testing. For this to work:
 #
-# - set_fact with cacheable: true does NOT reliably persist to database
-# - Custom fact modules returning ansible_facts do NOT reliably persist
-# - Only facts from gather_facts are reliably stored by AAP's fact cache
+# 1. Job Template must have use_fact_cache=True (Enable Fact Storage)
+# 2. Facts must be set with cacheable: yes parameter
+# 3. AAP automatically persists these to main_host.ansible_facts on job completion
 #
-# WORKAROUND:
-# The test suite directly updates the main_host.ansible_facts column in the
-# database after the job completes. This is the accepted pattern for test data.
-# See: metrics-utility/tools/testathon/testathon_data_prepare.py:update_host_facts()
-#
+# This is the proper integration test approach - no direct DB manipulation needed.
 # ================================
 
 - hosts: all
@@ -43,10 +39,17 @@
           - "ansible_machine_id variable defined: {{ ansible_machine_id is defined }}"
           - "ansible_machine_id value: {{ ansible_machine_id | default('NOT DEFINED') }}"
       when: ansible_product_serial is defined or ansible_machine_id is defined
-    - name: set custom facts using custom module (note: may not persist in AAP 2.6)
-      set_custom_facts:
-        ansible_product_serial: "{{ ansible_product_serial | default(omit) }}"
-        ansible_machine_id: "{{ ansible_machine_id | default(omit) }}"
+    - name: Set ansible_product_serial as cacheable fact
+      set_fact:
+        ansible_product_serial: "{{ ansible_product_serial }}"
+        cacheable: yes
+      when: ansible_product_serial is defined
+
+    - name: Set ansible_machine_id as cacheable fact
+      set_fact:
+        ansible_machine_id: "{{ ansible_machine_id }}"
+        cacheable: yes
+      when: ansible_machine_id is defined
     - name: debug facts after setting
       debug:
         msg:
